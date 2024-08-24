@@ -1,7 +1,11 @@
 const mongoose = require("mongoose");
 
-async function connectMongoDb() {
+async function connectMongoDb(url) {
   return mongoose
-    .connect("mongodb://localhost:27017/nodedbs")
+    .connect(url)
     .then(() => console.log("Connected Successfully"));
 }
+
+module.exports = {
+  connectMongoDb,
+};
