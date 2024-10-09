@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>URL Shortener</title>
+</head>
+<body>
+  <div>
+    <h1>URL Shortener</h1>
+    <p>Enter The URL To Short</p>
+    <form action="/homepage" method="POST">
+      <input name="url" placeholder="Enter URL" type="text" required />
+      <button type="submit">Shorten</button>
+    </form>
+  </div>
+  <div>
+    <p>The Shortened URL is</p>
+    <p id="shortedURL">
+      <a href='<%= shortURL %>'><%= shortURL %></a>
+    </p>
+  </div>
+</body>
+</html>
