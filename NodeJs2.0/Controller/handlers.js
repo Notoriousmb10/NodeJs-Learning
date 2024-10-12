@@ -1,36 +1,66 @@
 const { Order, User } = require("../Model/schema");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const { generateJWTToken } = require("../Jwt/jwt");
 
 const signUp = async (req, res) => {
   const { username, password, email } = req.body;
-  try {
-    const salt = await bcrypt.genSalt(12);
 
+  if (!username || !password) {
+    return res.status(400).send("Please fill all the fields");
+  }
+
+  try {
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).send("Username already exists");
+    }
+
+    const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
+
     const credentials = {
       username,
       password: hashedPassword,
       email,
     };
-    if (username === "" || password === "" || email === "") {
-      res.status(400).send("Please fill all the fields");
-    } else {
-      const ExistingUser = await User.findOne({
-        username: username,
-      });
-      if (ExistingUser) {
-        res.status(400).send("Username already exists");
-      } else {
-        const savedUser = await User.create(credentials);
-        await savedUser.save();
-        const token = await generateJWTToken(credentials);
-        res.status(201).send(savedUser);
-      }
-    }
+
+    const savedUser = await User.create(credentials);
+    await savedUser.save();
+    const payload = {
+      username: savedUser.username,
+    };
+    const token = generateJWTToken(payload);
+
+    res.status(201).send({ user: savedUser, token });
   } catch (err) {
-    res.status(403).send("Error: " + err);
+    res.status(500).send("Error: " + err.message);
+  }
+};
+
+const logIn = async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).send("Please fill all the fields");
+  }
+
+  try {
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(400).send("User not found");
+    }
+
+    const isPasswordMatched = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatched) {
+      return res.status(400).send("Incorrect password");
+    }
+
+    const payload = { username: user.username };
+    const token = generateJWTToken(payload);
+
+    res.status(200).send({ token, message: "Login successful" });
+  } catch (error) {
+    res.status(500).send("Error: " + error.message);
   }
 };
 
@@ -50,6 +80,15 @@ const order = async (req, res) => {
   }
 };
 
+const usersInfo = async (req, res) => {
+  try {
+    const usersinfo = await User.find().lean();
+    res.send(usersinfo);
+  } catch (error) {
+    res.status(500).send("Error: " + error.message);
+  }
+};
+
 const chickenMenu = (req, res) => {
   const chickenItems = {
     chicken: "chicken",
@@ -59,4 +98,4 @@ const chickenMenu = (req, res) => {
   res.send(chickenItems);
 };
 
-module.exports = { chickenMenu, order, signUp };
+module.exports = { chickenMenu, order, signUp, logIn, usersInfo };
