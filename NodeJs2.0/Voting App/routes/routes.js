@@ -9,4 +9,3 @@ Router.get('/candidates', getCandidates)
 
 Router.put('/candidates/:id', updateCandidate)
 Router.delete('/candidates/:id', deleteCandidate)
-
